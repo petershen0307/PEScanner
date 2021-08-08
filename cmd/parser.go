@@ -26,12 +26,12 @@ func checkAndCorrectConfigValue(config *models.Config) {
 	// check thread
 	if config.ConcurrentNumber < models.MinConcurrentNumber || config.ConcurrentNumber > models.MaxConcurrentNumber {
 		config.ConcurrentNumber = models.MinConcurrentNumber
-		log.Println("invalid thread number set to default ", config.ConcurrentNumber)
+		log.Println("invalid thread number set to default:", config.ConcurrentNumber)
 	}
 	// check mode
 	if config.Mode != models.Single && config.Mode != models.Concurrent {
 		config.Mode = models.Single
-		log.Println("fix mode to Single ", config.Mode)
+		log.Println("fix mode to Single:", config.Mode)
 	}
 	// check dir exist
 	correctInputDir := func(dir *string) {
@@ -39,11 +39,11 @@ func checkAndCorrectConfigValue(config *models.Config) {
 		if fileInfo, err := os.Stat(*dir); !os.IsNotExist(err) {
 			if !fileInfo.IsDir() {
 				*dir = currentDir
-				log.Println("input dir is not a dir. fix to current dir ", *dir)
+				log.Println("input dir is not a dir. fix to current dir:", *dir)
 			}
 		} else {
-			*dir = currentDir
-			log.Println("fix input dir to current dir ", *dir)
+			os.MkdirAll(*dir, os.ModePerm)
+			log.Println("Create dir:", *dir)
 		}
 	}
 	correctInputDir(&config.EntryFolder)
