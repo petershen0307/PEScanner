@@ -9,6 +9,7 @@ import (
 )
 
 func Write(filePath string, reports []models.Report) {
+	log.Println("output file:", filePath)
 	jsonBytes, err := json.MarshalIndent(reports, "", "    ")
 	if err != nil {
 		log.Println("json MarshalIndent failed:", err)

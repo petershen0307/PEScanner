@@ -21,6 +21,11 @@ func init() {
 	singleReports = make([]models.Report, 0)
 }
 
+func Run(config models.Config) {
+	inventory(config.EntryFolder)
+	writeReport(config.OutputDir)
+}
+
 func walkCallback(path string, d fs.DirEntry, err error) error {
 	if !d.IsDir() {
 		file, openError := os.Open(path)
@@ -36,15 +41,13 @@ func walkCallback(path string, d fs.DirEntry, err error) error {
 	return nil
 }
 
-func Inventory(startDir string) {
+func inventory(startDir string) {
 	err := filepath.WalkDir(startDir, walkCallback)
 	if err != nil {
 		log.Println("filepath.WalkDir error:", err)
 	}
 }
 
-func WriteReport(reportDir string) {
-	filePath := filepath.Join(reportDir, fmt.Sprintf("single-%v.json", time.Now().UTC().Unix()))
-	log.Println("output file:", filePath)
-	report.Write(filePath, singleReports)
+func writeReport(reportDir string) {
+	report.Write(filepath.Join(reportDir, fmt.Sprintf("single-%v.json", time.Now().UTC().Unix())), singleReports)
 }
