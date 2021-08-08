@@ -22,8 +22,9 @@ func init() {
 }
 
 func Run(config models.Config) {
+	start := time.Now()
 	inventory(config.EntryFolder)
-	writeReport(config.OutputDir)
+	writeReport(config.OutputDir, start)
 }
 
 func walkCallback(path string, d fs.DirEntry, err error) error {
@@ -48,6 +49,6 @@ func inventory(startDir string) {
 	}
 }
 
-func writeReport(reportDir string) {
-	report.Write(filepath.Join(reportDir, fmt.Sprintf("single-%v.json", time.Now().UTC().Unix())), singleReports)
+func writeReport(reportDir string, start time.Time) {
+	report.Write(filepath.Join(reportDir, fmt.Sprintf("single-%v.json", time.Now().UTC().Unix())), singleReports, start, time.Now())
 }

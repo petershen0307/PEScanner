@@ -60,23 +60,24 @@ func scan(wg *sync.WaitGroup) {
 	}
 }
 
-func collectReport(outputDir string, wg *sync.WaitGroup) {
+func collectReport(outputDir string, wg *sync.WaitGroup, startTIme time.Time) {
 	defer wg.Done()
 	reports := []models.Report{}
 	for oneReport := range reportChan {
 		reports = append(reports, oneReport)
 	}
-	report.Write(filepath.Join(outputDir, fmt.Sprintf("concurrent-%v.json", time.Now().UTC().Unix())), reports)
+	report.Write(filepath.Join(outputDir, fmt.Sprintf("concurrent-%v.json", time.Now().UTC().Unix())), reports, startTIme, time.Now())
 }
 
 func Run(config models.Config) {
+	startTime := time.Now()
 	scanWG := sync.WaitGroup{}
 	for i := 0; i < config.ConcurrentNumber; i++ {
 		go scan(&scanWG)
 		scanWG.Add(1)
 	}
 	reportWG := sync.WaitGroup{}
-	go collectReport(config.OutputDir, &reportWG)
+	go collectReport(config.OutputDir, &reportWG, startTime)
 	reportWG.Add(1)
 
 	inventory(config.EntryFolder)
