@@ -2,8 +2,10 @@ package models
 
 type scanMode int
 
-const Single scanMode = 1
-const Concurrent scanMode = 2
+const (
+	Single scanMode = iota + 1
+	Concurrent
+)
 
 const MaxConcurrentNumber = 5
 const MinConcurrentNumber = 1
