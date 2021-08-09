@@ -1,9 +1,19 @@
 package models
 
-type scanMode int
+type ScanMode int
+
+func (mode *ScanMode) String() string {
+	switch *mode {
+	case Single:
+		return "single"
+	case Concurrent:
+		return "concurrent"
+	}
+	return "None"
+}
 
 const (
-	Single scanMode = iota + 1
+	Single ScanMode = iota + 1
 	Concurrent
 )
 
@@ -11,7 +21,7 @@ const MaxConcurrentNumber = 5
 const MinConcurrentNumber = 1
 
 type Config struct {
-	Mode             scanMode
+	Mode             ScanMode
 	ConcurrentNumber int
 	EntryFolder      string
 	OutputDir        string

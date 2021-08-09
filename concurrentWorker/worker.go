@@ -1,7 +1,6 @@
 package concurrentworker
 
 import (
-	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -20,6 +19,9 @@ var filePathChan chan string
 // reportChan pass models.Report to report worker
 var reportChan chan models.Report
 
+var scanFiles int
+var peFiles int
+
 func init() {
 	filePathChan = make(chan string, 100)
 	reportChan = make(chan models.Report, 10)
@@ -28,7 +30,7 @@ func init() {
 func walkCallback(path string, d fs.DirEntry, err error) error {
 	if !d.IsDir() {
 		filePathChan <- path
-
+		scanFiles++
 	}
 	return nil
 }
@@ -60,13 +62,14 @@ func scan(wg *sync.WaitGroup) {
 	}
 }
 
-func collectReport(outputDir string, wg *sync.WaitGroup, startTIme time.Time) {
+func collectReport(outputDir string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	reports := []models.Report{}
 	for oneReport := range reportChan {
 		reports = append(reports, oneReport)
 	}
-	report.Write(filepath.Join(outputDir, fmt.Sprintf("concurrent-%v.json", time.Now().UTC().Unix())), reports, startTIme, time.Now())
+	report.Write(outputDir, models.Concurrent, reports)
+	peFiles = len(reports)
 }
 
 func Run(config models.Config) {
@@ -77,7 +80,7 @@ func Run(config models.Config) {
 		scanWG.Add(1)
 	}
 	reportWG := sync.WaitGroup{}
-	go collectReport(config.OutputDir, &reportWG, startTime)
+	go collectReport(config.OutputDir, &reportWG)
 	reportWG.Add(1)
 
 	inventory(config.EntryFolder)
@@ -95,4 +98,5 @@ func Run(config models.Config) {
 	}
 	close(reportChan)
 	reportWG.Wait()
+	report.WriteProfiling(config.OutputDir, models.Concurrent, startTime, time.Now(), scanFiles, peFiles)
 }

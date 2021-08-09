@@ -2,29 +2,31 @@ package report
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/petershen0307/PEScanner/models"
 )
 
-func Write(filePath string, reports []models.Report, start, end time.Time) {
+func Write(outputDir string, mode models.ScanMode, reports []models.Report) {
+	filePath := filepath.Join(outputDir, fmt.Sprintf("%v-%v.json", mode.String(), time.Now().UTC().Unix()))
 	log.Println("output file:", filePath)
-	jsonBytes, err := json.MarshalIndent(struct {
-		Reports             []models.Report
-		StartTime           int64
-		EndTime             int64
-		DiffTimeMicroSecond int64
-	}{
-		Reports:             reports,
-		StartTime:           start.UnixNano() / 1000,
-		EndTime:             start.UnixNano() / 1000,
-		DiffTimeMicroSecond: end.Sub(start).Microseconds(),
-	}, "", "    ")
+	jsonBytes, err := json.MarshalIndent(reports, "", "    ")
 	if err != nil {
 		log.Println("json MarshalIndent failed:", err)
 		return
 	}
 	os.WriteFile(filePath, jsonBytes, 0o755)
+}
+
+func WriteProfiling(outputDir string, mode models.ScanMode, start, end time.Time, scanFiles, peFiles int) {
+	filePath := filepath.Join(outputDir, fmt.Sprintf("%v-%v.csv", mode.String(), time.Now().UTC().Unix()))
+	header := "mode, start(MicroSec), end(MicroSec), execution(MicroSec), scanFiles, peFiles"
+	values := fmt.Sprintf("%v,%v,%v,%v.%v,%v", mode.String(), start.UnixNano()/1000, end.UnixNano()/1000, end.Sub(start).Microseconds(), scanFiles, peFiles)
+	outputStr := strings.Join([]string{header, values}, "\n")
+	os.WriteFile(filePath, []byte(outputStr), 0o755)
 }
