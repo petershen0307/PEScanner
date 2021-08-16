@@ -33,8 +33,10 @@ func IsPEFile(file *os.File) bool {
 	}
 	signatureValueBytes := make([]byte, offsetSize)
 	readN, err := file.ReadAt(signatureValueBytes, signatureOffset)
-	if readN != offsetSize || (err != nil && err != io.EOF) {
-		log.Printf("Read signature offset location(%v) not enough %v\n", readN, err)
+	if readN != offsetSize || err != nil {
+		if err != io.EOF {
+			log.Printf("Read signature offset location(%v) not enough %v\n", readN, err)
+		}
 		return false
 	}
 	sigLocationOffset := binary.LittleEndian.Uint32(signatureValueBytes)
@@ -45,7 +47,9 @@ func IsPEFile(file *os.File) bool {
 	peSigBytes := make([]byte, offsetSize)
 	readN, err = file.ReadAt(peSigBytes, int64(sigLocationOffset))
 	if readN != offsetSize || err != nil {
-		log.Printf("Read PE signature location(%v) not enough %v\n", readN, err)
+		if err != io.EOF {
+			log.Printf("Read PE signature location(%v) not enough %v\n", readN, err)
+		}
 		return false
 	}
 	return peSignatureValue == binary.LittleEndian.Uint32(peSigBytes)
