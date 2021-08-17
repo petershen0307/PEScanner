@@ -9,3 +9,9 @@ single thread mode sample command
 
 concurrent mode sample command
 `go run main.go -mode=2 -thread=3 -entry=/mnt/c/Users/PC/Desktop/code/go/PEScanner -output=/mnt/c/Users/PC/Desktop/code/go/PEScanner/output`
+
+```csv
+mode        start(MicroSec)   end(MicroSec)     execution(MicroSec)  scanFiles  peFiles
+concurrent  1629204728047230  1629206800904470  2072857237           983075     80370
+single      1629119992825590  1629127929314420  7936488823           985969     80366
+```
