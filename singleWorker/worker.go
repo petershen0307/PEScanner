@@ -15,17 +15,19 @@ import (
 // singleReports is for single worker report collection
 var singleReports []models.Report
 
-var scanFiles int
-
 // initialize singleReports
 func init() {
 	singleReports = make([]models.Report, 0)
 }
 
 func Run(config models.Config) {
-	start := time.Now()
+	models.ProfilingMetric.Mode = models.Single
+	models.ProfilingMetric.StartTime = time.Now()
 	inventory(config.EntryFolder)
-	writeReport(config.OutputDir, start, time.Now())
+	models.ProfilingMetric.EndTime = time.Now()
+	models.ProfilingMetric.PeFiles = len(singleReports)
+	report.Write(config.OutputDir, models.ProfilingMetric.Mode, singleReports)
+	models.ProfilingMetric.Write(config.OutputDir)
 }
 
 func walkCallback(path string, d fs.DirEntry, err error) error {
@@ -36,7 +38,7 @@ func walkCallback(path string, d fs.DirEntry, err error) error {
 			return nil
 		}
 		defer file.Close()
-		scanFiles++
+		models.ProfilingMetric.ScanFiles++
 		if scanner.IsPEFile(file) {
 			singleReports = append(singleReports, models.Report{FilePath: path, Sha2: scanner.GetFileSha2(file)})
 		}
@@ -49,9 +51,4 @@ func inventory(startDir string) {
 	if err != nil {
 		log.Println("filepath.WalkDir error:", err)
 	}
-}
-
-func writeReport(reportDir string, start, end time.Time) {
-	report.Write(reportDir, models.Single, singleReports)
-	report.WriteProfiling(reportDir, models.Single, start, end, scanFiles, len(singleReports))
 }

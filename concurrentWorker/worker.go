@@ -19,9 +19,6 @@ var filePathChan chan string
 // reportChan pass models.Report to report worker
 var reportChan chan models.Report
 
-var scanFiles int
-var peFiles int
-
 func init() {
 	filePathChan = make(chan string, 100)
 	reportChan = make(chan models.Report, 10)
@@ -30,7 +27,7 @@ func init() {
 func walkCallback(path string, d fs.DirEntry, err error) error {
 	if !d.IsDir() {
 		filePathChan <- path
-		scanFiles++
+		models.ProfilingMetric.ScanFiles++
 	}
 	return nil
 }
@@ -69,11 +66,12 @@ func collectReport(outputDir string, wg *sync.WaitGroup) {
 		reports = append(reports, oneReport)
 	}
 	report.Write(outputDir, models.Concurrent, reports)
-	peFiles = len(reports)
+	models.ProfilingMetric.PeFiles = len(reports)
 }
 
 func Run(config models.Config) {
-	startTime := time.Now()
+	models.ProfilingMetric.Mode = models.Concurrent
+	models.ProfilingMetric.StartTime = time.Now()
 	scanWG := sync.WaitGroup{}
 	for i := 0; i < config.ConcurrentNumber; i++ {
 		go scan(&scanWG)
@@ -98,5 +96,6 @@ func Run(config models.Config) {
 	}
 	close(reportChan)
 	reportWG.Wait()
-	report.WriteProfiling(config.OutputDir, models.Concurrent, startTime, time.Now(), scanFiles, peFiles)
+	models.ProfilingMetric.EndTime = time.Now()
+	models.ProfilingMetric.Write(config.OutputDir)
 }
